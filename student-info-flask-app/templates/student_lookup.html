@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Student Info</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<div>
+    <a href="{{ url_for('index') }}"><button>Home</button></a>
+</div>
+<body>
+    <h1>Student Info Lookup</h1>
+
+    <form method="POST" action="{{ url_for('student_lookup') }}">
+        <input type="text" name="search" placeholder="Student's First Name">
+        <input type="submit" value="Search">
+    </form>
+
+    {% if combined_results %}
+            <h2>Results for '{{ search_term }}':</h2>
+            <table id="student-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Student ID</th>
+                        <th>CENet Login</th>
+                        <!-- Add more column headers if needed -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in combined_results %}
+                        <tr>
+                            <td>{{ result[0][2] }}</td>
+                            <td>{{ result[0][1] }}</td>
+                            <td>{{ result[0][5] }}<button class="clipboard-btn" data-clipboard-text="{{ result[1] }}">
+                                <i class="fas fa-copy"></i></td></td>
+                            <td>{{ result[1] }}<button class="clipboard-btn" data-clipboard-text="{{ result[1] }}">
+                                <i class="fas fa-copy"></i></td>
+                            <!-- Add more columns here -->
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button onclick="exportTableToCSV()">Export to CSV</button>
+            <button onclick="printTable()">Print</button>
+    {% endif %}
+    <script>
+        document.querySelectorAll('.clipboard-btn').forEach(function(btn) {
+            new ClipboardJS(btn);
+        });
+        function exportTableToCSV() {
+            const table = document.getElementById("student-table");
+            const rows = table.querySelectorAll("tr");
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(function(row) {
+                const cells = row.querySelectorAll("td, th");
+                const rowData = Array.from(cells)
+                    .map(cell => cell.innerText)
+                    .join(",");
+                csvContent += rowData + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_info.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printTable() {
+            // Hide buttons
+            document.querySelectorAll('.clipboard-btn').forEach(function(btn) {
+                btn.style.display = 'none';
+            });
+            
+            // Display only the table for printing
+            const table = document.getElementById("student-table").outerHTML;
+            const printWindow = document.createElement('div');
+            printWindow.innerHTML = table;
+            document.body.innerHTML = printWindow.outerHTML;
+
+            // Trigger the print dialog
+            window.print();
+
+            // Restore the original content
+            location.reload();
+        }
+    </script>
+
+    <style>
+        @media print {
+            /* Apply print styles here, if needed */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 5px;
+                text-align: left;
+            }
+            /* Add more print styles if needed */
+        }
+    </style>
+</body>
+</html>
